@@ -2,6 +2,18 @@
 
 ## 🎯 Status: UNIFIED ARCHITECTURE - READY FOR RENDER
 
+## 🐛 CRITICAL BUG FOUND & FIXED
+
+**Problem:** Fresh accounts in virtual box STILL showed purple gradient banner.
+
+**Root Cause:** CSS file line 105 had `background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);` for `.header-cover` class - this was the old purple gradient!
+
+**Fix:** Changed to `background: var(--bg-card);` (dark grey #1A1A1E) with subtle border.
+
+**Status:** ✅ FIXED and deployed
+
+---
+
 ## 🚀 AUTOMATIC CACHE BUSTING (NUCLEAR OPTION)
 
 **Problem:** Telegram WebView aggressively caches CSS/JS files, preventing UI updates after deployment.
