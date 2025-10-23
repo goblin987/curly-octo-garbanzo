@@ -2,6 +2,26 @@
 
 ## 🎯 Status: UNIFIED ARCHITECTURE - READY FOR RENDER
 
+## 🚀 AUTOMATIC CACHE BUSTING (NEW)
+
+**Problem:** Telegram WebView aggressively caches CSS/JS files, preventing UI updates after deployment.
+
+**Solution:** Implemented automatic cache-busting system in `main.py`:
+- ✅ CSS version automatically generated from file modification timestamp
+- ✅ Version injected dynamically on every page load
+- ✅ HTTP headers set to prevent aggressive caching
+- ✅ **No manual version bumping needed** - works automatically on every deployment!
+
+**How it works:**
+1. `get_cache_version()` reads `styles.css` modification time
+2. HTML served with dynamic version: `styles.css?v=1729689123`
+3. Version changes automatically when CSS file is modified/deployed
+4. HTTP headers force browser to validate with server
+
+**Files modified:**
+- `main.py` - Added `get_cache_version()`, updated `root()`, added `/styles.css` and `/app.js` routes
+- Cache version updates automatically on every Render deployment!
+
 ---
 
 ## ✅ COMPLETED

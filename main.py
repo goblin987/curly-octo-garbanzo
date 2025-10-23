@@ -24,7 +24,7 @@ from telegram.constants import ParseMode
 from telegram.error import Forbidden, BadRequest, NetworkError, RetryAfter, TelegramError
 
 # --- Flask Imports ---
-from flask import Flask, request, Response, jsonify, send_from_directory # Added for webhook server
+from flask import Flask, request, Response, jsonify, send_from_directory, render_template_string # Added for webhook server
 from flask_cors import CORS
 import nest_asyncio # Added to allow nested asyncio loops
 
@@ -1194,10 +1194,62 @@ def webhook_test():
     logger.info(f"🔍 WEBHOOK TEST: Raw body: {request.get_data()}")
     return Response("Test webhook received successfully", status=200)
 
+def get_cache_version():
+    """
+    Generate cache version based on CSS file modification time.
+    Returns a version string that changes on every deployment.
+    """
+    try:
+        css_path = os.path.join('static', 'styles.css')
+        if os.path.exists(css_path):
+            mtime = os.path.getmtime(css_path)
+            return str(int(mtime))
+        return "1"
+    except Exception as e:
+        logger.warning(f"Could not generate cache version: {e}")
+        return "1"
+
 @flask_app.route("/", methods=['GET'])
 def root():
-    """Serve the mini app HTML"""
-    return send_from_directory('static', 'index.html')
+    """Serve the mini app HTML with automatic cache busting"""
+    try:
+        # Read the HTML file
+        html_path = os.path.join('static', 'index.html')
+        with open(html_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        
+        # Inject cache version dynamically for both CSS and JS
+        cache_version = get_cache_version()
+        html_content = html_content.replace('styles.css?v=20251023-force-reload', f'styles.css?v={cache_version}')
+        html_content = html_content.replace('src="app.js"', f'src="app.js?v={cache_version}"')
+        
+        # Return with no-cache headers
+        response = Response(html_content, content_type='text/html')
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+    except Exception as e:
+        logger.error(f"Error serving index.html: {e}")
+        return send_from_directory('static', 'index.html')
+
+@flask_app.route('/styles.css', methods=['GET'])
+def serve_css():
+    """Serve CSS with cache busting headers"""
+    response = send_from_directory('static', 'styles.css')
+    # Allow short cache but validate with server
+    response.headers['Cache-Control'] = 'public, max-age=300, must-revalidate'
+    response.headers['ETag'] = get_cache_version()
+    return response
+
+@flask_app.route('/app.js', methods=['GET'])
+def serve_js():
+    """Serve JavaScript with cache busting headers"""
+    response = send_from_directory('static', 'app.js')
+    # Allow short cache but validate with server
+    response.headers['Cache-Control'] = 'public, max-age=300, must-revalidate'
+    response.headers['ETag'] = get_cache_version()
+    return response
 
 # --- Mini App API Routes ---
 @flask_app.route('/api/cities', methods=['GET'])
