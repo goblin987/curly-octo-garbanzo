@@ -1,7 +1,7 @@
 /* ===========================
    Duck Demo Bot - Exact Replica
    Pure Black Background + White Selected Buttons
-   Last Updated: 2025-10-23 ICONS FIX
+   Last Updated: 2025-10-23 ALL SECTIONS VISIBLE
    =========================== */
 
 /* CSS Variables - Duck Demo Bot Colors */
@@ -157,6 +157,15 @@ body {
     color: var(--text-primary);
     margin-bottom: var(--spacing-md);
     text-transform: uppercase;
+}
+
+/* Section Placeholder Text */
+.section-placeholder {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 400;
+    margin: 0;
+    padding: var(--spacing-md) 0;
 }
 
 /* Professional Icons (using Unicode glyphs) */
