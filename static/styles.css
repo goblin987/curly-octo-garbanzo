@@ -1,38 +1,47 @@
 /* ===========================
    Premium Telegram Mini App
-   Duck Demo Bot Style
+   Duck Demo Bot Style - Professional Edition
    =========================== */
 
 /* CSS Variables */
 :root {
     /* Dark Theme Colors */
     --bg-primary: #0F0F0F;
-    --bg-secondary: #1E1E1E;
-    --bg-tertiary: #2A2A2A;
+    --bg-secondary: #1A1A1A;
+    --bg-card: #252525;
+    --bg-tertiary: #2F2F2F;
     --text-primary: #FFFFFF;
-    --text-secondary: #A0A0A0;
-    --text-hint: #6B6B6B;
+    --text-secondary: #B0B0B0;
+    --text-hint: #707070;
     --accent-blue: #4A9EFF;
     --border-selected: #FFFFFF;
-    --border-default: #3A3A3A;
+    --border-card: #353535;
     
     /* Spacing */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
-    --spacing-lg: 24px;
-    --spacing-xl: 32px;
+    --spacing-lg: 20px;
+    --spacing-xl: 28px;
     
     /* Border radius */
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
-    --radius-pill: 20px;
-    --radius-xl: 24px;
+    --radius-pill: 24px;
+    --radius-xl: 20px;
     
     /* Transitions */
-    --transition-fast: 0.15s ease;
-    --transition-normal: 0.3s ease;
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Typography */
+    --font-size-title: 22px;
+    --font-size-section: 13px;
+    --font-size-button: 14px;
+    --font-weight-bold: 700;
+    --font-weight-semibold: 600;
+    --font-weight-medium: 500;
 }
 
 /* Reset & Base */
@@ -43,10 +52,10 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-primary);
     color: var(--text-primary);
-    line-height: 1.6;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
@@ -77,7 +86,7 @@ body {
 .spinner {
     width: 48px;
     height: 48px;
-    border: 4px solid var(--bg-secondary);
+    border: 3px solid var(--bg-secondary);
     border-top-color: var(--accent-blue);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
@@ -91,7 +100,8 @@ body {
 .app-container {
     max-width: 600px;
     margin: 0 auto;
-    padding-bottom: 120px;
+    padding-bottom: 100px;
+    background-color: var(--bg-primary);
 }
 
 /* Header */
@@ -99,35 +109,40 @@ body {
     position: relative;
     padding: var(--spacing-xl) var(--spacing-lg);
     text-align: center;
-    margin-bottom: var(--spacing-lg);
-    background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+    margin-bottom: var(--spacing-md);
+    background: var(--bg-primary);
 }
 
 .header-cover {
     width: 100%;
-    height: 120px;
+    height: 140px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: var(--radius-lg);
-    margin-bottom: var(--spacing-md);
-    opacity: 0.8;
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--spacing-lg);
+    opacity: 0.9;
 }
 
 .header-title {
-    font-size: 24px;
-    font-weight: 700;
-    letter-spacing: 1px;
+    font-size: var(--font-size-title);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.5px;
     margin-bottom: var(--spacing-xs);
     text-transform: uppercase;
 }
 
 .header-tagline {
-    font-size: 14px;
+    font-size: 15px;
     color: var(--text-secondary);
+    font-weight: var(--font-weight-medium);
 }
 
-/* Section */
+/* Section - Card Style */
 .section {
-    padding: var(--spacing-lg) var(--spacing-md);
+    margin: 0 var(--spacing-md) var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background-color: var(--bg-card);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-card);
     animation: fadeIn var(--transition-normal);
 }
 
@@ -136,23 +151,76 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { 
+        opacity: 0; 
+        transform: translateY(8px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
 }
 
 .section-title {
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    color: var(--text-secondary);
-    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-section);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 1.2px;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
     text-transform: uppercase;
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
 }
 
-/* Pill Buttons */
+/* Icon Replacements (using Unicode symbols instead of emojis) */
+.section-title::before {
+    content: '';
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.9;
+}
+
+#city-section .section-title::before {
+    content: '🏙';
+    font-size: 16px;
+    width: auto;
+    height: auto;
+}
+
+#product-section .section-title::before {
+    content: '📦';
+    font-size: 16px;
+    width: auto;
+    height: auto;
+}
+
+#district-section .section-title::before {
+    content: '📍';
+    font-size: 16px;
+    width: auto;
+    height: auto;
+}
+
+#variation-section .section-title::before {
+    content: '⚙';
+    font-size: 16px;
+    width: auto;
+    height: auto;
+}
+
+#selected-section .section-title::before {
+    content: '✓';
+    font-size: 16px;
+    width: auto;
+    height: auto;
+}
+
+/* Pill Buttons - Professional Style */
 .pill-buttons {
     display: flex;
     flex-wrap: wrap;
@@ -161,19 +229,21 @@ body {
 
 .pill-buttons button {
     background-color: var(--bg-tertiary);
-    border: 2px solid transparent;
+    border: 1.5px solid var(--border-card);
     border-radius: var(--radius-pill);
     color: var(--text-primary);
-    padding: 12px 24px;
-    font-size: 14px;
-    font-weight: 500;
+    padding: 11px 20px;
+    font-size: var(--font-size-button);
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
     transition: all var(--transition-fast);
     white-space: nowrap;
+    letter-spacing: 0.3px;
 }
 
 .pill-buttons button:hover {
-    background-color: #353535;
+    background-color: #3A3A3A;
+    border-color: #454545;
 }
 
 .pill-buttons button:active {
@@ -182,62 +252,66 @@ body {
 
 .pill-buttons button.selected {
     border-color: var(--border-selected);
+    border-width: 2px;
     background-color: var(--bg-secondary);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
-/* Selected Card */
+/* Selected Card - Enhanced */
 .selected-card {
     background-color: var(--bg-secondary);
     border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-    border: 1px solid var(--border-default);
+    padding: var(--spacing-xl);
+    border: 1px solid var(--border-card);
 }
 
 .selected-item {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: var(--spacing-sm);
+    font-size: 19px;
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--spacing-lg);
+    color: var(--text-primary);
 }
 
 .selected-detail {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-sm) 0;
+    padding: var(--spacing-md) 0;
     font-size: 14px;
     color: var(--text-secondary);
-    border-bottom: 1px solid var(--border-default);
+    border-bottom: 1px solid var(--border-card);
 }
 
-.selected-detail:last-child {
+.selected-detail:last-of-type {
     border-bottom: none;
 }
 
 .selected-detail span:first-child {
     color: var(--text-hint);
+    font-weight: var(--font-weight-medium);
 }
 
 .selected-detail span:last-child {
     color: var(--text-primary);
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
 }
 
 .selected-price {
-    font-size: 24px !important;
+    font-size: 26px !important;
     color: var(--accent-blue) !important;
-    font-weight: 700 !important;
+    font-weight: var(--font-weight-bold) !important;
 }
 
 .selected-description {
-    margin-top: var(--spacing-md);
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--border-default);
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-card);
     font-size: 13px;
     line-height: 1.6;
     color: var(--text-secondary);
 }
 
-/* Order Button */
+/* Order Button - Enhanced */
 .order-button {
     position: fixed;
     bottom: 0;
@@ -247,14 +321,15 @@ body {
     color: var(--text-primary);
     border: none;
     padding: 18px var(--spacing-lg);
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 17px;
+    font-weight: var(--font-weight-bold);
     cursor: pointer;
     transition: all var(--transition-fast);
-    box-shadow: 0 -4px 24px rgba(74, 158, 255, 0.3);
+    box-shadow: 0 -2px 20px rgba(74, 158, 255, 0.25);
     max-width: 600px;
     margin: 0 auto;
     z-index: 100;
+    letter-spacing: 0.5px;
 }
 
 .order-button:active {
@@ -266,7 +341,7 @@ body {
     display: none;
 }
 
-/* Modal */
+/* Modal - Enhanced */
 .modal {
     position: fixed;
     top: 0;
@@ -290,30 +365,37 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
+    background-color: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
 }
 
 .modal-content {
     position: relative;
-    background-color: var(--bg-secondary);
+    background-color: var(--bg-card);
     border-radius: var(--radius-xl);
     width: 90%;
     max-width: 400px;
     max-height: 80vh;
     overflow: hidden;
     animation: slideUp var(--transition-normal);
-    border: 1px solid var(--border-default);
+    border: 1px solid var(--border-card);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 @keyframes slideUp {
-    from { transform: translateY(50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from { 
+        transform: translateY(30px); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translateY(0); 
+        opacity: 1; 
+    }
 }
 
 .modal-header {
-    padding: var(--spacing-lg);
-    border-bottom: 1px solid var(--border-default);
+    padding: var(--spacing-xl);
+    border-bottom: 1px solid var(--border-card);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -321,7 +403,7 @@ body {
 
 .modal-header h3 {
     font-size: 18px;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
 }
 
 .modal-close {
@@ -336,17 +418,22 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: background-color var(--transition-fast);
+}
+
+.modal-close:hover {
+    background-color: #3A3A3A;
 }
 
 .modal-body {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-xl);
     max-height: 50vh;
     overflow-y: auto;
 }
 
 .modal-footer {
-    padding: var(--spacing-lg);
-    border-top: 1px solid var(--border-default);
+    padding: var(--spacing-xl);
+    border-top: 1px solid var(--border-card);
     display: flex;
     gap: var(--spacing-md);
 }
@@ -354,57 +441,61 @@ body {
 .confirm-row {
     display: flex;
     justify-content: space-between;
-    padding: var(--spacing-sm) 0;
+    padding: var(--spacing-md) 0;
     font-size: 14px;
 }
 
 .confirm-row.total {
     font-size: 18px;
-    font-weight: 700;
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--border-default);
-    margin-top: var(--spacing-md);
+    font-weight: var(--font-weight-bold);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-card);
+    margin-top: var(--spacing-lg);
 }
 
 .confirm-label {
     color: var(--text-secondary);
+    font-weight: var(--font-weight-medium);
 }
 
 .confirm-value {
     color: var(--text-primary);
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
 }
 
 .confirm-notice {
-    margin-top: var(--spacing-md);
+    margin-top: var(--spacing-lg);
     padding: var(--spacing-md);
     background-color: var(--bg-tertiary);
     border-radius: var(--radius-md);
     font-size: 12px;
     color: var(--text-secondary);
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
-/* Buttons */
+/* Buttons - Enhanced */
 .btn-secondary,
 .btn-confirm {
     flex: 1;
-    padding: 14px var(--spacing-lg);
+    padding: 13px var(--spacing-lg);
     border: none;
     border-radius: var(--radius-md);
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: var(--font-weight-semibold);
     cursor: pointer;
     transition: all var(--transition-fast);
+    letter-spacing: 0.3px;
 }
 
 .btn-secondary {
     background-color: var(--bg-tertiary);
     color: var(--text-primary);
+    border: 1px solid var(--border-card);
 }
 
 .btn-secondary:active {
     transform: scale(0.97);
+    background-color: #3A3A3A;
 }
 
 .btn-confirm {
@@ -417,7 +508,7 @@ body {
     background-color: #3d8ee6;
 }
 
-/* Toast Notifications */
+/* Toast Notifications - Enhanced */
 .toast-container {
     position: fixed;
     top: var(--spacing-md);
@@ -428,15 +519,16 @@ body {
 }
 
 .toast {
-    background-color: var(--bg-secondary);
+    background-color: var(--bg-card);
     color: var(--text-primary);
-    padding: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
     border-radius: var(--radius-md);
     margin-bottom: var(--spacing-sm);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
     animation: slideDown var(--transition-normal);
     pointer-events: auto;
-    border: 1px solid var(--border-default);
+    border: 1px solid var(--border-card);
+    font-weight: var(--font-weight-medium);
 }
 
 .toast.success {
@@ -458,8 +550,14 @@ body {
 }
 
 @keyframes slideDown {
-    from { transform: translateY(-100%); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from { 
+        transform: translateY(-100%); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translateY(0); 
+        opacity: 1; 
+    }
 }
 
 /* Utilities */
@@ -467,9 +565,33 @@ body {
     display: none !important;
 }
 
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #3A3A3A;
+}
+
 /* Responsive */
 @media (min-width: 600px) {
     .order-button {
         border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     }
+}
+
+/* Focus States */
+button:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
 }
