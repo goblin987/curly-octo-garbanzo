@@ -2,8 +2,9 @@
 
 ## 🎯 Status: UNIFIED ARCHITECTURE - READY FOR RENDER
 
-## 🐛 CRITICAL BUG FOUND & FIXED
+## 🐛 CRITICAL BUGS FOUND & FIXED
 
+### Bug 1: Purple Gradient Banner
 **Problem:** Fresh accounts in virtual box STILL showed purple gradient banner.
 
 **Root Cause:** CSS file line 105 had `background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);` for `.header-cover` class - this was the old purple gradient!
@@ -11,6 +12,34 @@
 **Fix:** Changed to `background: var(--bg-card);` (dark grey #1A1A1E) with subtle border.
 
 **Status:** ✅ FIXED and deployed
+
+### Bug 2: Double Icons (🧊 🧊 showing instead of single icons)
+**Problem:** Users saw double/wrong emojis for section headers.
+
+**Root Cause:** Icons were defined in BOTH:
+- HTML: `<h2 class="section-title">🏙️ CITY</h2>`
+- CSS: `#city-section .section-title::before { content: '🏙️'; }`
+
+This caused duplicate icons to render!
+
+**Fix:** Removed emojis from HTML, kept them ONLY in CSS `::before` pseudo-elements:
+- HTML now: `<h2 class="section-title">CITY</h2>`
+- CSS adds icon via `::before`
+
+**Icons used:**
+- 🏙️ CITY
+- 📦 PRODUCT
+- 🗺️ DISTRICT
+- ⚙️ VARIATION
+- ✅ SELECTED
+
+**Status:** ✅ FIXED and deployed
+
+### Bug 3: Selected Button Style
+**Status:** ✅ Already correct in CSS (no changes needed)
+- CSS: `.pill-buttons button.selected` uses `background: #FFFFFF` (white) and `color: #000000` (black)
+- JavaScript: Uses `.selected` class correctly
+- Variables: `--bg-button-selected: #FFFFFF` and `--text-button-selected: #000000`
 
 ---
 
