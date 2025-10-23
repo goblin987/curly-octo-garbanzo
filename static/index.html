@@ -9,7 +9,7 @@
     <title>Shop</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        // Aggressive cache-busting: Force reload if CSS version is old
+        // Nuclear cache-busting: Load CSS ONLY via JavaScript with timestamp
         (function() {
             var cssLink = document.createElement('link');
             cssLink.rel = 'stylesheet';
@@ -17,7 +17,7 @@
             document.head.appendChild(cssLink);
         })();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20251023-force-reload" id="main-css">
+    <!-- CSS loaded dynamically via JavaScript above to prevent caching -->
 </head>
 <body>
     <!-- Loading Screen -->
