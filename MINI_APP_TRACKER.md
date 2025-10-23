@@ -94,6 +94,15 @@ PORT=10000  # Render default
 
 ## 🐛 KNOWN ISSUES & FIXES
 
+### Issue #7: Mini App Not Showing Cities/Districts/Products
+**Status:** ✅ FIXED
+**Problem:** Mini app opened but no cities, districts, or products were displayed
+**Root Cause:** API endpoints were importing `CITIES`, `DISTRICTS`, `PRODUCT_TYPES` inside the function, which got a reference to the empty initial dictionaries instead of the populated ones
+**Solution:** Import these dictionaries at the module level (top of main.py) so they reference the same objects that get populated by `load_all_data()`
+**Changes:** 
+- `main.py:49` - Added CITIES, DISTRICTS, PRODUCT_TYPES to top-level imports
+- `main.py:1204-1297` - Removed local imports from API endpoints
+
 ### Issue #6: NameError on /start - PRIMARY_ADMINS Not Defined
 **Status:** ✅ FIXED
 **Problem:** When user typed `/start`, bot crashed with `NameError: name 'PRIMARY_ADMINS' is not defined`
