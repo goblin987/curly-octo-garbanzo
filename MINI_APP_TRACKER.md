@@ -94,6 +94,15 @@ PORT=10000  # Render default
 
 ## 🐛 KNOWN ISSUES & FIXES
 
+### Issue #6: NameError on /start - PRIMARY_ADMINS Not Defined
+**Status:** ✅ FIXED
+**Problem:** When user typed `/start`, bot crashed with `NameError: name 'PRIMARY_ADMINS' is not defined`
+**Root Cause:** Code referenced non-existent variables `PRIMARY_ADMINS` and `HELPER_ADMINS`
+**Solution:** Import and use correct variables from utils.py:
+- Changed to use `PRIMARY_ADMIN_IDS` (list of integers)
+- Changed to use `SECONDARY_ADMIN_IDS` (list of integers)
+**Changes:** `main.py:35,375` - Import PRIMARY_ADMIN_IDS and use correct admin check
+
 ### Issue #5: NOWPAYMENTS_API_KEY Required But Not Needed for Webapp
 **Status:** ✅ FIXED
 **Problem:** `utils.py` crashed with SystemExit if NOWPAYMENTS_API_KEY missing
