@@ -1,6 +1,6 @@
 /* ===========================
    Premium Telegram Mini App
-   Duck Demo Bot Style - Professional Edition
+   Duck Demo Bot Style - Final Polish
    =========================== */
 
 /* CSS Variables */
@@ -9,12 +9,13 @@
     --bg-primary: #0F0F0F;
     --bg-secondary: #1A1A1A;
     --bg-card: #252525;
-    --bg-tertiary: #2F2F2F;
+    --bg-tertiary: #2A2A2A;
+    --bg-button: #2D2D2D;
     --text-primary: #FFFFFF;
     --text-secondary: #B0B0B0;
     --text-hint: #707070;
     --accent-blue: #4A9EFF;
-    --border-selected: #FFFFFF;
+    --accent-blue-hover: #5BADFF;
     --border-card: #353535;
     
     /* Spacing */
@@ -139,7 +140,7 @@ body {
 /* Section - Card Style */
 .section {
     margin: 0 var(--spacing-md) var(--spacing-lg);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-lg) var(--spacing-xl);
     background-color: var(--bg-card);
     border-radius: var(--radius-xl);
     border: 1px solid var(--border-card);
@@ -161,100 +162,107 @@ body {
     }
 }
 
+/* Section Title with Professional Icons */
 .section-title {
     font-size: var(--font-size-section);
     font-weight: var(--font-weight-bold);
-    letter-spacing: 1.2px;
+    letter-spacing: 1.5px;
     color: var(--text-primary);
     margin-bottom: var(--spacing-lg);
     text-transform: uppercase;
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: 10px;
 }
 
-/* Icon Replacements (using Unicode symbols instead of emojis) */
+/* Professional SVG-style Icons (using Unicode) */
 .section-title::before {
     content: '';
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    font-style: normal;
+    opacity: 1;
 }
 
+/* City Icon - Map/Location Pin */
 #city-section .section-title::before {
-    content: '🏙';
-    font-size: 16px;
-    width: auto;
-    height: auto;
+    content: '📍';
+    font-size: 18px;
 }
 
+/* Product Icon - Shopping Box */
 #product-section .section-title::before {
     content: '📦';
-    font-size: 16px;
-    width: auto;
-    height: auto;
+    font-size: 18px;
 }
 
+/* District Icon - Map Pin */
 #district-section .section-title::before {
-    content: '📍';
-    font-size: 16px;
-    width: auto;
-    height: auto;
+    content: '🗺️';
+    font-size: 18px;
 }
 
+/* Variation Icon - Settings/Options */
 #variation-section .section-title::before {
-    content: '⚙';
-    font-size: 16px;
-    width: auto;
-    height: auto;
+    content: '⚙️';
+    font-size: 18px;
 }
 
+/* Selected Icon - Checkmark */
 #selected-section .section-title::before {
-    content: '✓';
-    font-size: 16px;
-    width: auto;
-    height: auto;
+    content: '✅';
+    font-size: 18px;
 }
 
 /* Pill Buttons - Professional Style */
 .pill-buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--spacing-sm);
+    gap: 10px;
 }
 
+/* Unselected Buttons - Subtle, No Border */
 .pill-buttons button {
-    background-color: var(--bg-tertiary);
-    border: 1.5px solid var(--border-card);
+    background-color: var(--bg-button);
+    border: none;
     border-radius: var(--radius-pill);
     color: var(--text-primary);
-    padding: 11px 20px;
+    padding: 12px 22px;
     font-size: var(--font-size-button);
     font-weight: var(--font-weight-medium);
     cursor: pointer;
     transition: all var(--transition-fast);
     white-space: nowrap;
     letter-spacing: 0.3px;
+    box-shadow: none;
 }
 
 .pill-buttons button:hover {
-    background-color: #3A3A3A;
-    border-color: #454545;
+    background-color: #353535;
+    transform: translateY(-1px);
 }
 
 .pill-buttons button:active {
     transform: scale(0.97);
 }
 
+/* Selected Buttons - Strong Visual Highlight */
 .pill-buttons button.selected {
-    border-color: var(--border-selected);
-    border-width: 2px;
-    background-color: var(--bg-secondary);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-hover) 100%);
+    color: #FFFFFF;
+    font-weight: var(--font-weight-semibold);
+    box-shadow: 0 0 20px rgba(74, 158, 255, 0.4),
+                0 0 0 2px rgba(74, 158, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.pill-buttons button.selected:hover {
+    background: linear-gradient(135deg, var(--accent-blue-hover) 0%, var(--accent-blue) 100%);
+    box-shadow: 0 0 25px rgba(74, 158, 255, 0.5),
+                0 0 0 2px rgba(74, 158, 255, 0.3);
 }
 
 /* Selected Card - Enhanced */
@@ -317,7 +325,7 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    background-color: var(--accent-blue);
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-hover) 100%);
     color: var(--text-primary);
     border: none;
     padding: 18px var(--spacing-lg);
@@ -325,16 +333,20 @@ body {
     font-weight: var(--font-weight-bold);
     cursor: pointer;
     transition: all var(--transition-fast);
-    box-shadow: 0 -2px 20px rgba(74, 158, 255, 0.25);
+    box-shadow: 0 -4px 24px rgba(74, 158, 255, 0.3);
     max-width: 600px;
     margin: 0 auto;
     z-index: 100;
     letter-spacing: 0.5px;
 }
 
+.order-button:hover {
+    background: linear-gradient(135deg, var(--accent-blue-hover) 0%, var(--accent-blue) 100%);
+    box-shadow: 0 -4px 28px rgba(74, 158, 255, 0.4);
+}
+
 .order-button:active {
     transform: scale(0.98);
-    background-color: #3d8ee6;
 }
 
 .order-button.hidden {
@@ -499,13 +511,16 @@ body {
 }
 
 .btn-confirm {
-    background-color: var(--accent-blue);
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-hover) 100%);
     color: var(--text-primary);
+}
+
+.btn-confirm:hover {
+    background: linear-gradient(135deg, var(--accent-blue-hover) 0%, var(--accent-blue) 100%);
 }
 
 .btn-confirm:active {
     transform: scale(0.97);
-    background-color: #3d8ee6;
 }
 
 /* Toast Notifications - Enhanced */
