@@ -2,25 +2,39 @@
 
 ## 🎯 Status: UNIFIED ARCHITECTURE - READY FOR RENDER
 
-## 🚀 AUTOMATIC CACHE BUSTING (NEW)
+## 🚀 AUTOMATIC CACHE BUSTING (NUCLEAR OPTION)
 
 **Problem:** Telegram WebView aggressively caches CSS/JS files, preventing UI updates after deployment.
 
-**Solution:** Implemented automatic cache-busting system in `main.py`:
-- ✅ CSS version automatically generated from file modification timestamp
-- ✅ Version injected dynamically on every page load
-- ✅ HTTP headers set to prevent aggressive caching
-- ✅ **No manual version bumping needed** - works automatically on every deployment!
+**Solution:** Implemented **TRIPLE-LAYER** cache-busting system:
+
+### Layer 1: JavaScript Timestamp (MOST AGGRESSIVE)
+- ✅ `index.html` injects CSS with `Date.now()` timestamp on every page load
+- ✅ Generates unique URL **every single time** the page loads in browser
+- ✅ Bypasses ALL caching - even if HTML is cached, JS generates new CSS URL
+- ✅ **NUCLEAR OPTION** - guarantees fresh CSS on every load
+
+### Layer 2: Server-Side File Modification Time
+- ✅ `main.py` generates version from CSS file modification timestamp
+- ✅ Version injected dynamically when serving HTML
+- ✅ Changes automatically on every deployment
+
+### Layer 3: HTTP Cache Headers
+- ✅ `index.html`: No-cache headers (always fetch fresh)
+- ✅ `styles.css` & `app.js`: ETag validation with 5-minute cache
+- ✅ Forces browser to check with server
 
 **How it works:**
-1. `get_cache_version()` reads `styles.css` modification time
-2. HTML served with dynamic version: `styles.css?v=1729689123`
-3. Version changes automatically when CSS file is modified/deployed
-4. HTTP headers force browser to validate with server
+1. **Client-side:** `Date.now()` creates unique CSS URL on every page load
+2. **Server-side:** `get_cache_version()` provides fallback based on file mtime
+3. **HTTP headers:** Force validation and prevent long-term caching
 
 **Files modified:**
+- `index.html` - Added inline JavaScript to inject CSS with timestamp
 - `main.py` - Added `get_cache_version()`, updated `root()`, added `/styles.css` and `/app.js` routes
-- Cache version updates automatically on every Render deployment!
+- `styles.css` - Updated header comment to trigger new mtime
+
+**Result:** Cache clears **immediately** on every page load - no waiting, no manual clearing!
 
 ---
 
