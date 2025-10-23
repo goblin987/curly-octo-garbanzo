@@ -32,7 +32,7 @@ import nest_asyncio # Added to allow nested asyncio loops
 from utils import (
     TOKEN, ADMIN_ID, init_db, load_all_data, LANGUAGES, THEMES,
     SUPPORT_USERNAME, BASKET_TIMEOUT, clear_all_expired_baskets,
-    SECONDARY_ADMIN_IDS, WEBHOOK_URL,
+    PRIMARY_ADMIN_IDS, SECONDARY_ADMIN_IDS, WEBHOOK_URL,
     NOWPAYMENTS_IPN_SECRET,
     get_db_connection,
     DATABASE_PATH,
@@ -371,8 +371,8 @@ async def start_command_wrapper(update: Update, context: ContextTypes.DEFAULT_TY
         await send_message_with_retry(context.bot, update.effective_chat.id, ban_message, parse_mode=None)
         return
     
-    # Check if user is admin
-    if user_id in (ADMIN_ID, *[admin_id for admin_id, _ in PRIMARY_ADMINS], *HELPER_ADMINS):
+    # Check if user is admin (primary or secondary)
+    if user_id in PRIMARY_ADMIN_IDS or user_id in SECONDARY_ADMIN_IDS:
         # Admin gets normal bot interface
         await user.start(update, context)
     else:
