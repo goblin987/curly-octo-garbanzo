@@ -85,6 +85,12 @@ PORT=10000  # Render default
 
 ## 🐛 KNOWN ISSUES & FIXES
 
+### Issue #5: NOWPAYMENTS_API_KEY Required But Not Needed for Webapp
+**Status:** ✅ FIXED
+**Problem:** `utils.py` crashed with SystemExit if NOWPAYMENTS_API_KEY missing
+**Solution:** Changed to WARNING - webapp API doesn't need payment keys
+**Changes:** `utils.py:99-105` - Made NOWPAYMENTS_API_KEY and WEBHOOK_URL optional
+
 ### Issue #4: Render Deployment - Wrong Environment Variable & Path
 **Status:** ✅ FIXED
 **Problem:** 
@@ -93,12 +99,17 @@ PORT=10000  # Render default
 **Solution:** 
 - Changed `utils.py:27` to use `os.getenv('DISK_MOUNT_PATH', '/data')`
 - Updated environment variable name in tracker
-**Environment Variables:**
+**Required Environment Variables:**
 ```
 TOKEN=your_bot_token  (NOT TELEGRAM_BOT_TOKEN)
-DISK_MOUNT_PATH=/data
 WEBAPP_URL=https://your-app.onrender.com
+DISK_MOUNT_PATH=/data
 PORT=10000
+```
+**Optional (for payment features):**
+```
+NOWPAYMENTS_API_KEY=your_key
+WEBHOOK_URL=your_webhook_url
 ```
 
 ### Issue #1: Race Condition - Product Deletion
