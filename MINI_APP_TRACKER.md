@@ -41,6 +41,32 @@ This caused duplicate icons to render!
 - JavaScript: Uses `.selected` class correctly
 - Variables: `--bg-button-selected: #FFFFFF` and `--text-button-selected: #000000`
 
+### Bug 4: Missing Sections (Only CITY showing)
+**Problem:** User reported only CITY section was visible, missing PRODUCT, DISTRICT, VARIATION, SELECTED sections.
+
+**Root Cause:** All sections except CITY had `class="hidden"` in HTML, making them invisible by default.
+
+**Fix:** 
+- Removed `.hidden` class from all sections - now **ALL 5 sections visible at once**
+- Added placeholder text to DISTRICT: "Pick city and product"
+- Added placeholder text to SELECTED: "Pick a variation to see details."
+- Matches Duck Demo Bot layout exactly
+
+**Before:**
+```html
+<section id="product-section" class="section hidden">
+```
+
+**After:**
+```html
+<section id="product-section" class="section">
+  <h2 class="section-title">PRODUCT</h2>
+  <div id="product-list" class="pill-buttons"></div>
+</section>
+```
+
+**Status:** ✅ FIXED and deployed
+
 ---
 
 ## 🚀 AUTOMATIC CACHE BUSTING (NUCLEAR OPTION)
