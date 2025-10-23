@@ -1352,8 +1352,16 @@ def main() -> None:
         nonlocal application
         logger.info("Initializing application...")
         await application.initialize()
-        logger.info(f"Setting Telegram webhook to: {WEBHOOK_URL}/telegram/{TOKEN}")
-        if await application.bot.set_webhook(url=f"{WEBHOOK_URL}/telegram/{TOKEN}", allowed_updates=Update.ALL_TYPES):
+        
+        # Check if WEBHOOK_URL is set
+        if not WEBHOOK_URL:
+            logger.critical("WEBHOOK_URL environment variable is required for bot operation!")
+            logger.critical("Please set: WEBHOOK_URL=https://your-app-name.onrender.com")
+            raise ValueError("WEBHOOK_URL environment variable is required")
+        
+        webhook_url = f"{WEBHOOK_URL}/telegram/{TOKEN}"
+        logger.info(f"Setting Telegram webhook to: {webhook_url}")
+        if await application.bot.set_webhook(url=webhook_url, allowed_updates=Update.ALL_TYPES):
             logger.info("Telegram webhook set successfully.")
         else:
             logger.error("Failed to set Telegram webhook.")
