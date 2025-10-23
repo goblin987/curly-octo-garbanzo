@@ -24,7 +24,8 @@ from telegram.constants import ParseMode
 from telegram.error import Forbidden, BadRequest, NetworkError, RetryAfter, TelegramError
 
 # --- Flask Imports ---
-from flask import Flask, request, Response # Added for webhook server
+from flask import Flask, request, Response, jsonify, send_from_directory # Added for webhook server
+from flask_cors import CORS
 import nest_asyncio # Added to allow nested asyncio loops
 
 # --- Local Imports ---
@@ -171,7 +172,8 @@ logger = logging.getLogger(__name__)
 
 nest_asyncio.apply()
 
-flask_app = Flask(__name__)
+flask_app = Flask(__name__, static_folder='static', static_url_path='')
+CORS(flask_app)  # Enable CORS for mini app API
 telegram_app: Application | None = None
 main_loop = None
 
@@ -359,7 +361,7 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
 
 # --- Start Command Wrapper with Ban Check ---
 async def start_command_wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Wrapper for /start command that includes ban check"""
+    """Wrapper for /start command that includes ban check and auto-opens mini app for buyers"""
     user_id = update.effective_user.id
     
     # Check if user is banned before processing /start command
@@ -369,8 +371,34 @@ async def start_command_wrapper(update: Update, context: ContextTypes.DEFAULT_TY
         await send_message_with_retry(context.bot, update.effective_chat.id, ban_message, parse_mode=None)
         return
     
-    # If not banned, proceed with normal start command
-    await user.start(update, context)
+    # Check if user is admin
+    if user_id in (ADMIN_ID, *[admin_id for admin_id, _ in PRIMARY_ADMINS], *HELPER_ADMINS):
+        # Admin gets normal bot interface
+        await user.start(update, context)
+    else:
+        # Regular buyer gets mini app auto-opened
+        webapp_url = os.getenv('WEBAPP_URL', request.host_url if request else 'https://your-domain.com')
+        
+        keyboard = [
+            [InlineKeyboardButton(
+                "🛍️ Open Shop",
+                web_app=WebAppInfo(url=webapp_url)
+            )]
+        ]
+        
+        welcome_message = (
+            "🌟 Welcome to our Shop!\n\n"
+            "Click the button below to browse products and make purchases:\n\n"
+            "💰 Fast & Secure Payment\n"
+            "📦 Instant Delivery\n"
+            "🔒 Safe Transactions"
+        )
+        
+        await update.message.reply_text(
+            welcome_message,
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode=None
+        )
 
 # --- Admin Command Wrapper with Ban Check ---
 async def admin_command_wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -388,35 +416,6 @@ async def admin_command_wrapper(update: Update, context: ContextTypes.DEFAULT_TY
     await admin.handle_admin_menu(update, context)
 
 
-# --- WebApp Command ---
-async def webapp_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Send button to open the mini app"""
-    user_id = update.effective_user.id
-    
-    # Check if user is banned
-    if await is_user_banned(user_id):
-        logger.info(f"Banned user {user_id} attempted to use /webapp command.")
-        ban_message = "❌ Your access to this bot has been restricted."
-        await send_message_with_retry(context.bot, update.effective_chat.id, ban_message, parse_mode=None)
-        return
-    
-    # Get webapp URL from environment or use default
-    webapp_url = os.getenv('WEBAPP_URL', 'https://your-domain.com')
-    
-    keyboard = [
-        [InlineKeyboardButton(
-            "🛍️ Open Shop",
-            web_app=WebAppInfo(url=webapp_url)
-        )]
-    ]
-    
-    message = "🌟 Welcome to our Mini App!\n\nClick the button below to open the modern shopping experience:"
-    
-    await update.message.reply_text(
-        message,
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode=None
-    )
 
 # --- Central Message Handler (for states) ---
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1196,9 +1195,121 @@ def webhook_test():
 
 @flask_app.route("/", methods=['GET'])
 def root():
-    """Root endpoint to verify server is running"""
-    logger.info("🔍 ROOT: Root endpoint accessed")
-    return Response("Payment Bot Server is Running! Webhook: /webhook", status=200)
+    """Serve the mini app HTML"""
+    return send_from_directory('static', 'index.html')
+
+# --- Mini App API Routes ---
+@flask_app.route('/api/cities', methods=['GET'])
+def api_get_cities():
+    """Get all available cities"""
+    from utils import CITIES
+    cities_list = [{'id': city_id, 'name': city_name} for city_id, city_name in CITIES.items()]
+    return jsonify({'success': True, 'cities': cities_list})
+
+@flask_app.route('/api/districts/<city_id>', methods=['GET'])
+def api_get_districts(city_id):
+    """Get districts for a city"""
+    from utils import DISTRICTS
+    districts_dict = DISTRICTS.get(city_id, {})
+    districts_list = [{'id': dist_id, 'name': dist_name} for dist_id, dist_name in districts_dict.items()]
+    return jsonify({'success': True, 'districts': districts_list})
+
+@flask_app.route('/api/product-types', methods=['GET'])
+def api_get_product_types():
+    """Get all product types with emojis"""
+    from utils import PRODUCT_TYPES
+    types_list = [{'name': type_name, 'emoji': emoji} for type_name, emoji in PRODUCT_TYPES.items()]
+    return jsonify({'success': True, 'types': types_list})
+
+@flask_app.route('/api/products', methods=['GET'])
+def api_get_products():
+    """Get products with filters"""
+    from utils import CITIES, DISTRICTS, PRODUCT_TYPES
+    from reseller_management import get_reseller_discount
+    
+    city = request.args.get('city')
+    district = request.args.get('district')
+    product_type = request.args.get('type')
+    user_id = request.args.get('user_id', type=int)
+    
+    conn = get_db_connection()
+    c = conn.cursor()
+    
+    query = """
+        SELECT id, city, district, product_type, size, price, 
+               (available - reserved) as in_stock
+        FROM products 
+        WHERE available > reserved
+    """
+    params = []
+    
+    if city:
+        query += " AND city = ?"
+        params.append(CITIES.get(city, city))
+    
+    if district and city:
+        query += " AND district = ?"
+        params.append(DISTRICTS.get(city, {}).get(district, district))
+    
+    if product_type:
+        query += " AND product_type = ?"
+        params.append(product_type)
+    
+    query += " ORDER BY id DESC LIMIT 100"
+    
+    c.execute(query, params)
+    products = []
+    
+    for row in c.fetchall():
+        product = {
+            'id': row['id'],
+            'city': row['city'],
+            'district': row['district'],
+            'type': row['product_type'],
+            'size': row['size'],
+            'price': float(row['price']),
+            'in_stock': row['in_stock'],
+            'emoji': PRODUCT_TYPES.get(row['product_type'], '📦')
+        }
+        
+        if user_id:
+            try:
+                discount_percent = get_reseller_discount(user_id, row['product_type'])
+                if discount_percent > 0:
+                    discount_amount = float(row['price']) * discount_percent / 100
+                    product['original_price'] = float(row['price'])
+                    product['price'] = float(row['price']) - discount_amount
+                    product['discount_percent'] = discount_percent
+            except Exception:
+                pass
+        
+        c.execute("SELECT media_type FROM product_media WHERE product_id = ? LIMIT 1", (row['id'],))
+        media_row = c.fetchone()
+        if media_row:
+            product['media_type'] = media_row['media_type']
+            product['has_media'] = True
+        
+        products.append(product)
+    
+    conn.close()
+    return jsonify({'success': True, 'products': products})
+
+@flask_app.route('/api/basket', methods=['GET'])
+def api_get_basket():
+    """Get user's basket"""
+    from utils import PRODUCT_TYPES
+    from reseller_management import get_reseller_discount
+    import time
+    
+    # For now, return empty basket - full implementation requires Telegram auth
+    # This will be enhanced once we add proper authentication
+    return jsonify({'success': True, 'basket': [], 'total': 0})
+
+@flask_app.route('/api/user/balance', methods=['GET'])
+def api_get_user_balance():
+    """Get user balance"""
+    # For now, return 0 - requires Telegram auth
+    return jsonify({'success': True, 'balance': 0.0})
 
 def main() -> None:
     global telegram_app, main_loop
@@ -1212,7 +1323,6 @@ def main() -> None:
     application = app_builder.build()
     application.add_handler(CommandHandler("start", start_command_wrapper)) # Use wrapped start with ban check
     application.add_handler(CommandHandler("admin", admin_command_wrapper)) # Use wrapped admin with ban check
-    application.add_handler(CommandHandler("webapp", webapp_command)) # Mini App launcher
     application.add_handler(CallbackQueryHandler(handle_callback_query))
     application.add_handler(MessageHandler(
         (filters.TEXT & ~filters.COMMAND) | filters.PHOTO | filters.VIDEO | filters.ANIMATION | filters.Document.ALL,

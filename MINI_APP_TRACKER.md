@@ -1,13 +1,13 @@
 # Telegram Mini App - Progress & Bug Tracker
 
-## 🎯 Status: READY FOR RENDER DEPLOYMENT
+## 🎯 Status: UNIFIED ARCHITECTURE - READY FOR RENDER
 
 ---
 
 ## ✅ COMPLETED
 
 ### Phase 1: Backend API (Flask)
-- ✅ Created `webapp_api.py` (510 lines)
+- ✅ Merged webapp API routes into `main.py`
 - ✅ REST endpoints: cities, districts, products, basket, checkout
 - ✅ Telegram authentication (HMAC-SHA256)
 - ✅ Media file serving
@@ -22,9 +22,13 @@
 - ✅ Basket with floating button
 - ✅ Checkout flow
 
-### Phase 3: Bot Integration
-- ✅ Modified `main.py` - added `/webapp` command
-- ✅ Added imports for WebApp
+### Phase 3: Bot Integration - UNIFIED APPROACH
+- ✅ Modified `main.py` - merged Flask API + Bot in one file
+- ✅ Added imports for WebApp and flask-cors
+- ✅ `/start` command auto-opens mini app for buyers
+- ✅ `/admin` command opens admin menu in bot chat
+- ✅ Removed separate `/webapp` command (not needed)
+- ✅ Admin detection: admins get bot interface, buyers get mini app
 - ✅ Updated `requirements.txt` - added flask-cors
 
 ### Phase 4: Critical Fix
@@ -36,15 +40,19 @@
 
 ## 🚀 RENDER DEPLOYMENT SETUP
 
-### Files Created
+### Files Modified/Created
 ```
-webapp_api.py          # Flask API server
+main.py                # UNIFIED: Bot + Flask API in one file
 static/index.html      # Mini app UI
 static/styles.css      # Styling
 static/app.js          # JavaScript logic
-main.py                # Modified (added /webapp command)
 requirements.txt       # Updated (flask-cors added)
 ```
+
+### ⚠️ IMPORTANT: Single Process Architecture
+- **Only run `main.py`** - it contains both bot and API
+- No need for separate `webapp_api.py` anymore
+- One process handles everything: Telegram bot + Mini App API
 
 ### Environment Variables Needed on Render
 ```bash
@@ -56,16 +64,16 @@ PORT=10000  # Render default
 
 ### Render Configuration
 
-**Option 1: Single Service (Recommended)**
-- Run both bot and webapp API in same service
-- Modify `main.py` to start Flask in separate thread
+**🎯 UNIFIED ARCHITECTURE (Single Service)**
+- Run `python main.py` - handles both bot and API
+- Flask runs in background thread (already configured)
 - Bot webhook on `/webhook`
-- Mini app on `/`
-
-**Option 2: Two Services**
-- Service 1: Bot (main.py)
-- Service 2: Mini App API (webapp_api.py)
-- Shared environment variables
+- Mini app on `/` (serves static/index.html)
+- API routes on `/api/*`
+- **User Experience:**
+  - Buyer types `/start` → Mini app opens automatically
+  - Admin types `/start` → Bot menu (as before)
+  - Admin types `/admin` → Admin panel in bot chat
 
 ---
 
@@ -73,11 +81,12 @@ PORT=10000  # Render default
 
 - [x] Update `webapp_api.py` port to use `os.getenv('PORT', 5000)` ✅
 - [x] Push code to GitHub (https://github.com/goblin987/curly-octo-garbanzo.git) ✅
-- [ ] Test `/webapp` command returns correct URL
+- [x] Merge API into main.py (unified architecture) ✅
+- [x] Make `/start` auto-open mini app for buyers ✅
 - [ ] Set WEBAPP_URL environment variable on Render
 - [ ] Deploy to Render (connect GitHub repo)
-- [ ] Test mini app opens from Telegram
-- [ ] Configure BotFather menu button
+- [ ] Test `/start` command opens mini app for buyers
+- [ ] Test `/admin` command opens admin menu
 - [ ] Test basket reservation system
 - [ ] Verify media files load correctly
 
