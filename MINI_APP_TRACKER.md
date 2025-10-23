@@ -72,9 +72,10 @@ PORT=10000  # Render default
 ## 📋 TODO FOR DEPLOYMENT
 
 - [x] Update `webapp_api.py` port to use `os.getenv('PORT', 5000)` ✅
+- [x] Push code to GitHub (https://github.com/goblin987/curly-octo-garbanzo.git) ✅
 - [ ] Test `/webapp` command returns correct URL
 - [ ] Set WEBAPP_URL environment variable on Render
-- [ ] Deploy to Render
+- [ ] Deploy to Render (connect GitHub repo)
 - [ ] Test mini app opens from Telegram
 - [ ] Configure BotFather menu button
 - [ ] Test basket reservation system
