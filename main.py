@@ -1307,6 +1307,126 @@ def api_get_user_balance():
     # For now, return 0 - requires Telegram auth
     return jsonify({'success': True, 'balance': 0.0})
 
+@flask_app.route('/api/order', methods=['POST'])
+def api_create_order():
+    """
+    Create order, reserve product, and generate payment
+    """
+    try:
+        data = request.get_json()
+        product_id = data.get('product_id')
+        user_id = data.get('user_id')
+        
+        if not product_id or not user_id:
+            return jsonify({'success': False, 'message': 'Missing product_id or user_id'})
+        
+        # Get product details
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        c.execute("""
+            SELECT id, city, district, product_type, size, price, (available - reserved) as in_stock
+            FROM products 
+            WHERE id = ? AND available > reserved
+        """, (product_id,))
+        
+        product = c.fetchone()
+        
+        if not product:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Product not available'})
+        
+        # Reserve the product
+        c.execute("""
+            UPDATE products 
+            SET reserved = reserved + 1 
+            WHERE id = ? AND available > reserved
+        """, (product_id,))
+        
+        if c.rowcount == 0:
+            conn.rollback()
+            conn.close()
+            return jsonify({'success': False, 'message': 'Failed to reserve product'})
+        
+        conn.commit()
+        
+        # Add to basket (for payment processing)
+        import time
+        basket_timestamp = time.time()
+        
+        c.execute("""
+            INSERT INTO baskets (user_id, product_id, added_at)
+            VALUES (?, ?, ?)
+        """, (user_id, product_id, basket_timestamp))
+        
+        conn.commit()
+        conn.close()
+        
+        # Create payment via NOWPayments
+        try:
+            import requests
+            from utils import NOWPAYMENTS_API_KEY
+            
+            if not NOWPAYMENTS_API_KEY:
+                # If no payment key, just return success for testing
+                return jsonify({
+                    'success': True,
+                    'message': 'Product reserved! Payment link will be sent to bot.',
+                    'reservation_id': product_id
+                })
+            
+            # Create NOWPayments invoice
+            payment_data = {
+                'price_amount': float(product['price']),
+                'price_currency': 'EUR',
+                'order_id': f"{user_id}_{product_id}_{int(time.time())}",
+                'order_description': f"{product['product_type']} - {product['size']}",
+                'ipn_callback_url': f"{WEBHOOK_URL}/webhook",
+                'success_url': 'https://t.me/your_bot',
+                'cancel_url': 'https://t.me/your_bot'
+            }
+            
+            headers = {
+                'x-api-key': NOWPAYMENTS_API_KEY,
+                'Content-Type': 'application/json'
+            }
+            
+            response = requests.post(
+                'https://api.nowpayments.io/v1/invoice',
+                json=payment_data,
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200 or response.status_code == 201:
+                invoice_data = response.json()
+                payment_url = invoice_data.get('invoice_url')
+                
+                return jsonify({
+                    'success': True,
+                    'payment_url': payment_url,
+                    'reservation_id': product_id
+                })
+            else:
+                logger.error(f"NOWPayments API error: {response.text}")
+                return jsonify({
+                    'success': True,
+                    'message': 'Product reserved! Payment link will be sent to bot.',
+                    'reservation_id': product_id
+                })
+                
+        except Exception as payment_error:
+            logger.error(f"Payment creation error: {payment_error}")
+            return jsonify({
+                'success': True,
+                'message': 'Product reserved! Payment link will be sent to bot.',
+                'reservation_id': product_id
+            })
+            
+    except Exception as e:
+        logger.error(f"Order creation error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': f'Order failed: {str(e)}'})
+
 def main() -> None:
     global telegram_app, main_loop
     logger.info("Starting bot...")

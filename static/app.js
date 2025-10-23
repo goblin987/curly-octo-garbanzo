@@ -1,6 +1,6 @@
 /**
- * Telegram Mini App - Vanilla JavaScript
- * Modern, fast shopping experience
+ * Premium Telegram Mini App
+ * Duck Demo Bot Style - Sequential Selection Flow
  */
 
 // Initialize Telegram WebApp
@@ -10,31 +10,26 @@ tg.expand();
 
 // Apply Telegram theme
 const applyTheme = () => {
-    const root = document.documentElement;
     const theme = tg.themeParams;
-    
-    if (theme.bg_color) root.style.setProperty('--tg-theme-bg-color', theme.bg_color);
-    if (theme.text_color) root.style.setProperty('--tg-theme-text-color', theme.text_color);
-    if (theme.hint_color) root.style.setProperty('--tg-theme-hint-color', theme.hint_color);
-    if (theme.link_color) root.style.setProperty('--tg-theme-link-color', theme.link_color);
-    if (theme.button_color) root.style.setProperty('--tg-theme-button-color', theme.button_color);
-    if (theme.button_text_color) root.style.setProperty('--tg-theme-button-text-color', theme.button_text_color);
-    if (theme.secondary_bg_color) root.style.setProperty('--tg-theme-secondary-bg-color', theme.secondary_bg_color);
+    // Override with dark theme for premium look
+    document.documentElement.style.setProperty('--tg-theme-bg-color', theme.bg_color || '#0F0F0F');
 };
 
 // State Management
 const state = {
-    currentPage: 'shop',
     selectedCity: null,
+    selectedCityName: null,
+    selectedProduct: null,
+    selectedProductEmoji: null,
     selectedDistrict: null,
-    selectedType: null,
-    products: [],
-    basket: [],
+    selectedDistrictName: null,
+    selectedVariation: null,
+    
     cities: [],
+    products: [],
     districts: [],
-    productTypes: [],
-    userBalance: 0,
-    appliedDiscount: null
+    variations: [],
+    allProducts: []
 };
 
 // API Base URL
@@ -44,9 +39,7 @@ const API_BASE = window.location.origin;
 const api = {
     async get(endpoint) {
         const response = await fetch(`${API_BASE}/api${endpoint}`, {
-            headers: {
-                'X-Telegram-Init-Data': tg.initData
-            }
+            headers: { 'X-Telegram-Init-Data': tg.initData }
         });
         return response.json();
     },
@@ -61,16 +54,6 @@ const api = {
             body: JSON.stringify(data)
         });
         return response.json();
-    },
-    
-    async delete(endpoint) {
-        const response = await fetch(`${API_BASE}/api${endpoint}`, {
-            method: 'DELETE',
-            headers: {
-                'X-Telegram-Init-Data': tg.initData
-            }
-        });
-        return response.json();
     }
 };
 
@@ -83,40 +66,11 @@ const showToast = (message, type = 'info') => {
     container.appendChild(toast);
     
     setTimeout(() => {
-        toast.style.animation = 'slideUp var(--transition-normal) reverse';
+        toast.style.animation = 'slideDown var(--transition-normal) reverse';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
-};
-
-// Navigation
-const navigateTo = (page) => {
-    // Hide all pages
-    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
     
-    // Show target page
-    document.getElementById(`${page}-page`).classList.remove('hidden');
-    state.currentPage = page;
-    
-    // Configure Telegram Back Button
-    if (page === 'shop') {
-        tg.BackButton.hide();
-    } else {
-        tg.BackButton.show();
-        tg.BackButton.onClick(() => {
-            if (page === 'basket' || page === 'checkout') {
-                navigateTo('shop');
-            }
-        });
-    }
-    
-    // Update page-specific content
-    if (page === 'basket') {
-        loadBasket();
-    } else if (page === 'checkout') {
-        loadCheckout();
-    }
-    
-    tg.HapticFeedback.impactOccurred('light');
+    tg.HapticFeedback.notificationOccurred(type === 'error' ? 'error' : 'success');
 };
 
 // Initialize App
@@ -124,15 +78,8 @@ const init = async () => {
     try {
         applyTheme();
         
-        // Load initial data
-        await Promise.all([
-            loadCities(),
-            loadProductTypes(),
-            loadUserBalance()
-        ]);
-        
-        // Setup event listeners
-        setupEventListeners();
+        // Load cities
+        await loadCities();
         
         // Hide loading screen
         document.getElementById('loading-screen').classList.add('hidden');
@@ -144,180 +91,81 @@ const init = async () => {
     }
 };
 
-// Setup Event Listeners
-const setupEventListeners = () => {
-    // City selector
-    document.getElementById('city-select').addEventListener('change', (e) => {
-        state.selectedCity = e.target.value;
-        if (state.selectedCity) {
-            loadDistricts(state.selectedCity);
-        } else {
-            document.getElementById('district-tabs').classList.add('hidden');
-            document.getElementById('type-filters').classList.add('hidden');
-            document.getElementById('product-grid').innerHTML = '';
-        }
-    });
-    
-    // Main Button (for checkout)
-    tg.MainButton.onClick(handleMainButtonClick);
-};
-
 // Load Cities
 const loadCities = async () => {
     try {
         const response = await api.get('/cities');
-        if (response.success) {
+        if (response.success && response.cities) {
             state.cities = response.cities;
-            renderCitySelector();
+            renderCities();
         }
     } catch (error) {
         console.error('Load cities error:', error);
+        showToast('Failed to load cities', 'error');
     }
 };
 
-// Render City Selector
-const renderCitySelector = () => {
-    const select = document.getElementById('city-select');
-    select.innerHTML = '<option value="">Select city...</option>';
+// Render Cities
+const renderCities = () => {
+    const container = document.getElementById('city-list');
+    container.innerHTML = '';
     
     state.cities.forEach(city => {
-        const option = document.createElement('option');
-        option.value = city.id;
-        option.textContent = city.name;
-        select.appendChild(option);
+        const btn = document.createElement('button');
+        btn.textContent = city.name;
+        btn.onclick = () => selectCity(city.id, city.name);
+        container.appendChild(btn);
     });
 };
 
-// Load Districts
-const loadDistricts = async (cityId) => {
-    try {
-        const response = await api.get(`/districts/${cityId}`);
-        if (response.success) {
-            state.districts = response.districts;
-            renderDistrictTabs();
-        }
-    } catch (error) {
-        console.error('Load districts error:', error);
-    }
-};
-
-// Render District Tabs
-const renderDistrictTabs = () => {
-    const container = document.getElementById('district-tabs');
-    container.innerHTML = '';
+// Select City
+const selectCity = async (cityId, cityName) => {
+    state.selectedCity = cityId;
+    state.selectedCityName = cityName;
     
-    if (state.districts.length === 0) {
-        container.classList.add('hidden');
-        return;
-    }
+    // Reset downstream selections
+    state.selectedProduct = null;
+    state.selectedDistrict = null;
+    state.selectedVariation = null;
     
-    container.classList.remove('hidden');
+    // Update UI
+    highlightSelected('city-list', cityName);
+    hideSection('district-section');
+    hideSection('variation-section');
+    hideSection('selected-section');
+    hideOrderButton();
     
-    state.districts.forEach(district => {
-        const tab = document.createElement('div');
-        tab.className = 'tab';
-        tab.textContent = district.name;
-        tab.onclick = () => selectDistrict(district.id);
-        container.appendChild(tab);
-    });
-};
-
-// Select District
-const selectDistrict = (districtId) => {
-    state.selectedDistrict = districtId;
+    // Load products for this city
+    await loadProducts(cityId);
     
-    // Update active tab
-    document.querySelectorAll('#district-tabs .tab').forEach((tab, index) => {
-        tab.classList.toggle('active', state.districts[index].id === districtId);
-    });
-    
-    loadProductTypes();
-    tg.HapticFeedback.impactOccurred('light');
-};
-
-// Load Product Types
-const loadProductTypes = async () => {
-    try {
-        const response = await api.get('/product-types');
-        if (response.success) {
-            state.productTypes = response.types;
-            renderProductTypeFilters();
-            loadProducts(); // Load all products by default
-        }
-    } catch (error) {
-        console.error('Load product types error:', error);
-    }
-};
-
-// Render Product Type Filters
-const renderProductTypeFilters = () => {
-    const container = document.getElementById('type-filters');
-    container.innerHTML = '';
-    
-    if (state.productTypes.length === 0) {
-        container.classList.add('hidden');
-        return;
-    }
-    
-    container.classList.remove('hidden');
-    
-    // "All" chip
-    const allChip = document.createElement('div');
-    allChip.className = 'chip active';
-    allChip.textContent = 'All';
-    allChip.onclick = () => selectProductType(null);
-    container.appendChild(allChip);
-    
-    // Type chips
-    state.productTypes.forEach(type => {
-        const chip = document.createElement('div');
-        chip.className = 'chip';
-        chip.textContent = `${type.emoji} ${type.name}`;
-        chip.onclick = () => selectProductType(type.name);
-        container.appendChild(chip);
-    });
-};
-
-// Select Product Type
-const selectProductType = (typeName) => {
-    state.selectedType = typeName;
-    
-    // Update active chip
-    document.querySelectorAll('#type-filters .chip').forEach(chip => {
-        const isAllChip = chip.textContent === 'All';
-        const isActiveChip = typeName === null ? isAllChip : chip.textContent.includes(typeName);
-        chip.classList.toggle('active', isActiveChip);
-    });
-    
-    loadProducts();
     tg.HapticFeedback.impactOccurred('light');
 };
 
 // Load Products
-const loadProducts = async () => {
+const loadProducts = async (cityId) => {
     try {
-        const grid = document.getElementById('product-grid');
-        const emptyState = document.getElementById('empty-state');
-        
-        grid.innerHTML = '<div class="loading-placeholder">Loading products...</div>';
-        emptyState.classList.add('hidden');
-        
-        const params = new URLSearchParams();
-        if (state.selectedCity) params.append('city', state.selectedCity);
-        if (state.selectedDistrict) params.append('district', state.selectedDistrict);
-        if (state.selectedType) params.append('type', state.selectedType);
-        if (tg.initDataUnsafe?.user?.id) params.append('user_id', tg.initDataUnsafe.user.id);
-        
-        const response = await api.get(`/products?${params}`);
-        
-        if (response.success) {
-            state.products = response.products;
+        const response = await api.get(`/products?city=${cityId}`);
+        if (response.success && response.products) {
+            state.allProducts = response.products;
             
-            if (state.products.length === 0) {
-                grid.innerHTML = '';
-                emptyState.classList.remove('hidden');
-            } else {
+            // Get unique product types
+            const uniqueTypes = {};
+            response.products.forEach(p => {
+                if (!uniqueTypes[p.type]) {
+                    uniqueTypes[p.type] = {
+                        name: p.type,
+                        emoji: p.emoji || '📦'
+                    };
+                }
+            });
+            
+            state.products = Object.values(uniqueTypes);
+            
+            if (state.products.length > 0) {
                 renderProducts();
+                showSection('product-section');
+            } else {
+                showToast('No products available in this city', 'error');
             }
         }
     } catch (error) {
@@ -328,316 +176,276 @@ const loadProducts = async () => {
 
 // Render Products
 const renderProducts = () => {
-    const grid = document.getElementById('product-grid');
-    grid.innerHTML = '';
+    const container = document.getElementById('product-list');
+    container.innerHTML = '';
     
     state.products.forEach(product => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.onclick = () => showProductDetail(product.id);
-        
-        const priceHTML = product.original_price 
-            ? `<span class="product-price-original">€${product.original_price.toFixed(2)}</span>
-               <span class="product-price">€${product.price.toFixed(2)}</span>
-               <span class="discount-badge">-${product.discount_percent}%</span>`
-            : `<span class="product-price">€${product.price.toFixed(2)}</span>`;
-        
-        card.innerHTML = `
-            <div class="product-image-container">
-                ${product.has_media 
-                    ? `<img src="${API_BASE}/media/${product.id}/thumb.jpg" class="product-image" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                       <div class="product-emoji" style="display:none;">${product.emoji}</div>`
-                    : `<div class="product-emoji">${product.emoji}</div>`
-                }
-                ${product.in_stock === 0 ? '<div class="out-of-stock-badge">OUT OF STOCK</div>' : ''}
-            </div>
-            <div class="product-info">
-                <div class="product-title">${product.emoji} ${product.type}</div>
-                <div class="product-size">${product.size}</div>
-                <div class="product-price-container">
-                    ${priceHTML}
-                </div>
-            </div>
-        `;
-        
-        grid.appendChild(card);
+        const btn = document.createElement('button');
+        btn.textContent = `${product.emoji} ${product.name}`;
+        btn.onclick = () => selectProduct(product.name, product.emoji);
+        container.appendChild(btn);
     });
 };
 
-// Show Product Detail
-const showProductDetail = async (productId) => {
-    try {
-        tg.HapticFeedback.impactOccurred('medium');
-        
-        const response = await api.get(`/product/${productId}`);
-        
-        if (response.success) {
-            const product = response.product;
-            const modal = document.getElementById('product-modal');
-            const content = document.getElementById('product-detail-content');
-            
-            const priceHTML = product.original_price 
-                ? `<div class="product-price-container">
-                       <span class="product-price-original">€${product.original_price.toFixed(2)}</span>
-                       <span class="product-price">€${product.price.toFixed(2)}</span>
-                       <span class="discount-badge">-${product.discount_percent}%</span>
-                   </div>`
-                : `<div class="product-price">€${product.price.toFixed(2)}</div>`;
-            
-            content.innerHTML = `
-                <div class="product-detail">
-                    ${product.media && product.media.length > 0
-                        ? `<img src="${API_BASE}/media/${product.id}/full.jpg" class="product-detail-image" onerror="this.style.display='none';">`
-                        : `<div class="product-image-container"><div class="product-emoji">${product.emoji}</div></div>`
-                    }
-                    <h2 class="product-detail-title">${product.emoji} ${product.type}</h2>
-                    <div class="product-detail-location">📍 ${product.city} - ${product.district}</div>
-                    <div class="product-size">${product.size}</div>
-                    ${priceHTML}
-                    ${product.description ? `<p class="product-detail-description">${product.description}</p>` : ''}
-                    <div class="product-detail-actions">
-                        <button class="btn-secondary" onclick="closeProductModal()">Close</button>
-                        <button class="btn-primary" onclick="addToBasket(${product.id})">Add to Basket 🛒</button>
-                    </div>
-                </div>
-            `;
-            
-            modal.classList.remove('hidden');
-        }
-    } catch (error) {
-        console.error('Show product detail error:', error);
-        showToast('Failed to load product details', 'error');
-    }
-};
-
-// Close Product Modal
-const closeProductModal = () => {
-    document.getElementById('product-modal').classList.add('hidden');
+// Select Product
+const selectProduct = async (productType, emoji) => {
+    state.selectedProduct = productType;
+    state.selectedProductEmoji = emoji;
+    
+    // Reset downstream selections
+    state.selectedDistrict = null;
+    state.selectedVariation = null;
+    
+    // Update UI
+    highlightSelected('product-list', productType);
+    hideSection('variation-section');
+    hideSection('selected-section');
+    hideOrderButton();
+    
+    // Load districts for this product in selected city
+    await loadDistricts(state.selectedCity, productType);
+    
     tg.HapticFeedback.impactOccurred('light');
 };
 
-// Add to Basket
-const addToBasket = async (productId) => {
+// Load Districts
+const loadDistricts = async (cityId, productType) => {
     try {
-        tg.HapticFeedback.notificationOccurred('success');
-        showToast('Added to basket!', 'success');
-        closeProductModal();
+        // Filter products to get unique districts for this city+product
+        const filteredProducts = state.allProducts.filter(p => 
+            p.type === productType && p.in_stock > 0
+        );
         
-        // Refresh basket
-        await loadBasket();
-        updateBasketBadge();
-        
-    } catch (error) {
-        console.error('Add to basket error:', error);
-        showToast('Failed to add to basket', 'error');
-    }
-};
-
-// Load Basket
-const loadBasket = async () => {
-    try {
-        const response = await api.get('/basket');
-        
-        if (response.success) {
-            state.basket = response.basket;
-            renderBasket();
-            updateBasketBadge();
-        }
-    } catch (error) {
-        console.error('Load basket error:', error);
-    }
-};
-
-// Render Basket
-const renderBasket = () => {
-    const container = document.getElementById('basket-items');
-    const emptyState = document.getElementById('empty-basket');
-    
-    if (state.basket.length === 0) {
-        container.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        tg.MainButton.hide();
-        return;
-    }
-    
-    emptyState.classList.add('hidden');
-    container.innerHTML = '';
-    
-    let subtotal = 0;
-    
-    state.basket.forEach(item => {
-        const itemEl = document.createElement('div');
-        itemEl.className = 'basket-item';
-        
-        itemEl.innerHTML = `
-            <div class="basket-item-image">${item.emoji}</div>
-            <div class="basket-item-info">
-                <div class="basket-item-title">${item.type}</div>
-                <div class="basket-item-location">${item.city} - ${item.district}</div>
-            </div>
-            <div class="basket-item-price">€${item.price.toFixed(2)}</div>
-        `;
-        
-        container.appendChild(itemEl);
-        subtotal += item.price;
-    });
-    
-    // Update totals
-    document.getElementById('subtotal').textContent = `€${subtotal.toFixed(2)}`;
-    
-    if (state.appliedDiscount) {
-        document.getElementById('discount-row').classList.remove('hidden');
-        document.getElementById('discount-amount').textContent = `-€${state.appliedDiscount.discount_amount.toFixed(2)}`;
-        document.getElementById('total').textContent = `€${state.appliedDiscount.final_total.toFixed(2)}`;
-    } else {
-        document.getElementById('discount-row').classList.add('hidden');
-        document.getElementById('total').textContent = `€${subtotal.toFixed(2)}`;
-    }
-    
-    // Show Main Button for checkout
-    const total = state.appliedDiscount ? state.appliedDiscount.final_total : subtotal;
-    tg.MainButton.setText(`Checkout €${total.toFixed(2)}`);
-    tg.MainButton.show();
-};
-
-// Update Basket Badge
-const updateBasketBadge = () => {
-    const fab = document.getElementById('basket-fab');
-    const badge = document.getElementById('basket-count');
-    
-    const count = state.basket.length;
-    badge.textContent = count;
-    
-    if (count > 0) {
-        fab.classList.remove('hidden');
-    } else {
-        fab.classList.add('hidden');
-    }
-};
-
-// Apply Discount
-const applyDiscount = async () => {
-    try {
-        const input = document.getElementById('discount-input');
-        const code = input.value.trim().toUpperCase();
-        
-        if (!code) {
-            showToast('Please enter a discount code', 'error');
-            return;
-        }
-        
-        const subtotal = state.basket.reduce((sum, item) => sum + item.price, 0);
-        
-        const response = await api.post('/discount/validate', {
-            code: code,
-            total: subtotal
+        const uniqueDistricts = {};
+        filteredProducts.forEach(p => {
+            if (!uniqueDistricts[p.district]) {
+                uniqueDistricts[p.district] = p.district;
+            }
         });
         
-        if (response.success && response.valid) {
-            state.appliedDiscount = response;
-            showToast('Discount applied!', 'success');
-            renderBasket();
-            tg.HapticFeedback.notificationOccurred('success');
+        state.districts = Object.values(uniqueDistricts);
+        
+        if (state.districts.length > 0) {
+            renderDistricts();
+            showSection('district-section');
         } else {
-            showToast(response.message || 'Invalid discount code', 'error');
-            tg.HapticFeedback.notificationOccurred('error');
+            showToast('No districts available for this product', 'error');
         }
     } catch (error) {
-        console.error('Apply discount error:', error);
-        showToast('Failed to apply discount', 'error');
+        console.error('Load districts error:', error);
+        showToast('Failed to load districts', 'error');
     }
 };
 
-// Load User Balance
-const loadUserBalance = async () => {
-    try {
-        const response = await api.get('/user/balance');
-        if (response.success) {
-            state.userBalance = response.balance;
-        }
-    } catch (error) {
-        console.error('Load balance error:', error);
-    }
-};
-
-// Load Checkout
-const loadCheckout = () => {
-    // Update balance display
-    document.getElementById('balance-subtitle').textContent = `Balance: €${state.userBalance.toFixed(2)}`;
-    
-    // Render checkout items
-    const container = document.getElementById('checkout-items');
+// Render Districts
+const renderDistricts = () => {
+    const container = document.getElementById('district-list');
     container.innerHTML = '';
     
-    state.basket.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'basket-item-title';
-        div.textContent = `${item.emoji} ${item.type} - €${item.price.toFixed(2)}`;
-        container.appendChild(div);
+    state.districts.forEach(district => {
+        const btn = document.createElement('button');
+        btn.textContent = district;
+        btn.onclick = () => selectDistrict(district);
+        container.appendChild(btn);
     });
+};
+
+// Select District
+const selectDistrict = (districtName) => {
+    state.selectedDistrict = districtName;
+    state.selectedDistrictName = districtName;
     
-    // Update total
-    const total = state.appliedDiscount ? state.appliedDiscount.final_total : state.basket.reduce((sum, item) => sum + item.price, 0);
-    document.getElementById('checkout-total').textContent = `€${total.toFixed(2)}`;
+    // Reset downstream selections
+    state.selectedVariation = null;
+    
+    // Update UI
+    highlightSelected('district-list', districtName);
+    hideSection('selected-section');
+    hideOrderButton();
+    
+    // Load variations for this city+product+district
+    loadVariations(state.selectedCity, state.selectedProduct, districtName);
+    
+    tg.HapticFeedback.impactOccurred('light');
 };
 
-// Checkout with Balance
-const checkoutWithBalance = async () => {
-    try {
-        tg.HapticFeedback.impactOccurred('heavy');
-        showToast('Processing payment with balance...', 'info');
-        
-        // TODO: Implement actual checkout logic
-        // This would call the existing payment.py functions
-        
-        showToast('Payment processing - this feature will be connected to your existing payment system', 'info');
-    } catch (error) {
-        console.error('Checkout error:', error);
-        showToast('Checkout failed', 'error');
+// Load Variations
+const loadVariations = (cityId, productType, district) => {
+    // Filter products to get variations (different sizes/prices)
+    const variations = state.allProducts.filter(p => 
+        p.type === productType && 
+        p.district === district &&
+        p.in_stock > 0
+    );
+    
+    state.variations = variations;
+    
+    if (variations.length > 0) {
+        renderVariations();
+        showSection('variation-section');
+    } else {
+        showToast('No variations available', 'error');
     }
 };
 
-// Checkout with Crypto
-const checkoutWithCrypto = async () => {
-    try {
-        tg.HapticFeedback.impactOccurred('heavy');
-        showToast('Generating cryptocurrency invoice...', 'info');
-        
-        // TODO: Implement actual crypto checkout
-        // This would call the existing NOWPayments integration
-        
-        showToast('Crypto payment - this feature will be connected to your existing payment system', 'info');
-    } catch (error) {
-        console.error('Crypto checkout error:', error);
-        showToast('Checkout failed', 'error');
-    }
+// Render Variations
+const renderVariations = () => {
+    const container = document.getElementById('variation-list');
+    container.innerHTML = '';
+    
+    state.variations.forEach(variation => {
+        const btn = document.createElement('button');
+        btn.textContent = `${variation.size} — €${variation.price.toFixed(2)}`;
+        btn.onclick = () => selectVariation(variation);
+        container.appendChild(btn);
+    });
 };
 
-// Handle Main Button Click
-const handleMainButtonClick = () => {
-    if (state.currentPage === 'basket') {
-        navigateTo('checkout');
-    }
+// Select Variation
+const selectVariation = (variation) => {
+    state.selectedVariation = variation;
+    
+    // Update UI
+    highlightSelected('variation-list', variation.size);
+    
+    // Show selected section
+    renderSelected();
+    showSection('selected-section');
+    showOrderButton();
+    
+    tg.HapticFeedback.impactOccurred('medium');
 };
 
-// Clear Basket
-const clearBasket = async () => {
+// Render Selected
+const renderSelected = () => {
+    const container = document.getElementById('selected-details');
+    const v = state.selectedVariation;
+    
+    container.innerHTML = `
+        <div class="selected-item">${state.selectedProductEmoji} ${state.selectedProduct} — ${v.size}</div>
+        <div class="selected-detail">
+            <span>Stock:</span>
+            <span>${v.in_stock}</span>
+        </div>
+        <div class="selected-detail">
+            <span>Price:</span>
+            <span class="selected-price">€${v.price.toFixed(2)}</span>
+        </div>
+        <div class="selected-detail">
+            <span>City:</span>
+            <span>${state.selectedCityName}</span>
+        </div>
+        <div class="selected-detail">
+            <span>District:</span>
+            <span>${state.selectedDistrictName}</span>
+        </div>
+        <div class="selected-description">
+            ${state.selectedProductEmoji} ${v.size} • Includes updates for 12 months.
+        </div>
+    `;
+};
+
+// Order Button Click
+document.getElementById('order-btn').onclick = () => {
+    showConfirmModal();
+    tg.HapticFeedback.impactOccurred('heavy');
+};
+
+// Show Confirmation Modal
+const showConfirmModal = () => {
+    const v = state.selectedVariation;
+    const modal = document.getElementById('confirm-modal');
+    const details = document.getElementById('confirm-details');
+    
+    details.innerHTML = `
+        <div class="confirm-row">
+            <span class="confirm-label">${state.selectedCityName} — ${state.selectedDistrictName}</span>
+        </div>
+        <div class="confirm-row">
+            <span class="confirm-label">${state.selectedProductEmoji} ${state.selectedProduct} — ${v.size}</span>
+        </div>
+        <div class="confirm-row total">
+            <span class="confirm-label">Price</span>
+            <span class="confirm-value">€${v.price.toFixed(2)}</span>
+        </div>
+        <div class="confirm-notice">
+            Your order will be reserved for 30 minutes after confirmation.
+        </div>
+    `;
+    
+    modal.classList.remove('hidden');
+};
+
+// Close Confirmation Modal
+const closeConfirmModal = () => {
+    document.getElementById('confirm-modal').classList.add('hidden');
+    tg.HapticFeedback.impactOccurred('light');
+};
+
+// Confirm Order
+const confirmOrder = async () => {
     try {
-        const response = await api.post('/basket/clear');
+        closeConfirmModal();
+        showToast('Creating payment...', 'info');
+        
+        const userId = tg.initDataUnsafe?.user?.id || 0;
+        const productId = state.selectedVariation.id;
+        
+        const response = await api.post('/order', {
+            product_id: productId,
+            user_id: userId
+        });
         
         if (response.success) {
-            state.basket = [];
-            state.appliedDiscount = null;
-            renderBasket();
-            updateBasketBadge();
-            showToast('Basket cleared', 'success');
+            // Open payment URL
+            if (response.payment_url) {
+                tg.openLink(response.payment_url);
+                showToast('Payment page opened!', 'success');
+            } else {
+                showToast('Order created! Payment link will be sent to bot.', 'success');
+            }
+        } else {
+            showToast(response.message || 'Order failed', 'error');
         }
     } catch (error) {
-        console.error('Clear basket error:', error);
-        showToast('Failed to clear basket', 'error');
+        console.error('Confirm order error:', error);
+        showToast('Failed to create order', 'error');
     }
+};
+
+// UI Helper Functions
+const showSection = (sectionId) => {
+    document.getElementById(sectionId).classList.remove('hidden');
+};
+
+const hideSection = (sectionId) => {
+    document.getElementById(sectionId).classList.add('hidden');
+};
+
+const showOrderButton = () => {
+    document.getElementById('order-btn').classList.remove('hidden');
+};
+
+const hideOrderButton = () => {
+    document.getElementById('order-btn').classList.add('hidden');
+};
+
+const highlightSelected = (containerId, text) => {
+    const container = document.getElementById(containerId);
+    const buttons = container.querySelectorAll('button');
+    
+    buttons.forEach(btn => {
+        if (btn.textContent.includes(text)) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
 };
 
 // Initialize on load
 window.addEventListener('load', init);
 
+// Make functions globally accessible
+window.closeConfirmModal = closeConfirmModal;
+window.confirmOrder = confirmOrder;

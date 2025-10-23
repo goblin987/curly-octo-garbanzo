@@ -14,134 +14,66 @@
         <p>Loading...</p>
     </div>
 
-    <!-- Shop Page -->
-    <div id="shop-page" class="page">
-        <header class="header">
-            <!-- City Selector -->
-            <div class="selector-container">
-                <label for="city-select" class="selector-label">City</label>
-                <select id="city-select" class="selector">
-                    <option value="">Select city...</option>
-                </select>
-            </div>
-
-            <!-- District Tabs -->
-            <div id="district-tabs" class="tabs hidden"></div>
-
-            <!-- Product Type Filters -->
-            <div id="type-filters" class="chips-container hidden"></div>
+    <!-- Main App Container -->
+    <div id="app" class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-cover"></div>
+            <h1 class="header-title">WELCOME TO SHOP</h1>
+            <p class="header-tagline">Everything is customisable</p>
         </header>
 
-        <!-- Product Grid -->
-        <main id="product-grid" class="product-grid"></main>
+        <!-- City Section -->
+        <section id="city-section" class="section">
+            <h2 class="section-title">🏙️ CITY</h2>
+            <div id="city-list" class="pill-buttons"></div>
+        </section>
 
-        <!-- Empty State -->
-        <div id="empty-state" class="empty-state hidden">
-            <div class="empty-icon">📦</div>
-            <h3>No Products Available</h3>
-            <p>Try selecting a different location or check back later.</p>
-        </div>
+        <!-- Product Type Section -->
+        <section id="product-section" class="section hidden">
+            <h2 class="section-title">📦 PRODUCT</h2>
+            <div id="product-list" class="pill-buttons"></div>
+        </section>
+
+        <!-- District Section -->
+        <section id="district-section" class="section hidden">
+            <h2 class="section-title">🗺️ DISTRICT</h2>
+            <div id="district-list" class="pill-buttons"></div>
+        </section>
+
+        <!-- Variation Section -->
+        <section id="variation-section" class="section hidden">
+            <h2 class="section-title">⚙️ VARIATION</h2>
+            <div id="variation-list" class="pill-buttons"></div>
+        </section>
+
+        <!-- Selected Section -->
+        <section id="selected-section" class="section hidden">
+            <h2 class="section-title">✅ SELECTED</h2>
+            <div id="selected-details" class="selected-card"></div>
+        </section>
+
+        <!-- Order Button -->
+        <button id="order-btn" class="order-button hidden">
+            🛒 ORDER
+        </button>
     </div>
 
-    <!-- Product Detail Modal -->
-    <div id="product-modal" class="modal hidden">
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-backdrop" onclick="closeConfirmModal()"></div>
         <div class="modal-content">
-            <button class="modal-close" onclick="closeProductModal()">✕</button>
-            <div id="product-detail-content"></div>
+            <div class="modal-header">
+                <h3>Confirm Order</h3>
+                <button class="modal-close" onclick="closeConfirmModal()">✕</button>
+            </div>
+            <div id="confirm-details" class="modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeConfirmModal()">No</button>
+                <button class="btn-confirm" onclick="confirmOrder()">✓ Confirm Order</button>
+            </div>
         </div>
     </div>
-
-    <!-- Basket Page -->
-    <div id="basket-page" class="page hidden">
-        <header class="header">
-            <h1>🛒 Your Basket</h1>
-        </header>
-
-        <main class="basket-content">
-            <div id="basket-items" class="basket-items"></div>
-
-            <!-- Discount Section -->
-            <div class="discount-section">
-                <input 
-                    type="text" 
-                    id="discount-input" 
-                    placeholder="Discount code" 
-                    class="discount-input"
-                >
-                <button id="apply-discount-btn" class="btn-secondary" onclick="applyDiscount()">
-                    Apply
-                </button>
-            </div>
-
-            <!-- Total Section -->
-            <div class="total-section">
-                <div class="total-row">
-                    <span>Subtotal:</span>
-                    <span id="subtotal">€0.00</span>
-                </div>
-                <div id="discount-row" class="total-row discount-row hidden">
-                    <span>Discount:</span>
-                    <span id="discount-amount">-€0.00</span>
-                </div>
-                <div class="total-row total-final">
-                    <span>Total:</span>
-                    <span id="total">€0.00</span>
-                </div>
-            </div>
-
-            <!-- Empty Basket State -->
-            <div id="empty-basket" class="empty-state hidden">
-                <div class="empty-icon">🛒</div>
-                <h3>Your basket is empty</h3>
-                <p>Add some products to get started!</p>
-                <button class="btn-primary" onclick="navigateTo('shop')">
-                    Start Shopping
-                </button>
-            </div>
-        </main>
-    </div>
-
-    <!-- Checkout Page -->
-    <div id="checkout-page" class="page hidden">
-        <header class="header">
-            <h1>💳 Checkout</h1>
-        </header>
-
-        <main class="checkout-content">
-            <div class="payment-methods">
-                <h3>Select Payment Method</h3>
-                <button class="payment-method-btn" onclick="checkoutWithBalance()">
-                    <span class="payment-icon">💰</span>
-                    <div>
-                        <div class="payment-title">Pay with Balance</div>
-                        <div class="payment-subtitle" id="balance-subtitle">Balance: €0.00</div>
-                    </div>
-                </button>
-                <button class="payment-method-btn" onclick="checkoutWithCrypto()">
-                    <span class="payment-icon">₿</span>
-                    <div>
-                        <div class="payment-title">Pay with Cryptocurrency</div>
-                        <div class="payment-subtitle">BTC, ETH, USDT & more</div>
-                    </div>
-                </button>
-            </div>
-
-            <div class="checkout-summary">
-                <h3>Order Summary</h3>
-                <div id="checkout-items"></div>
-                <div class="checkout-total">
-                    <span>Total:</span>
-                    <span id="checkout-total">€0.00</span>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Floating Action Button (Basket) -->
-    <button id="basket-fab" class="fab hidden" onclick="navigateTo('basket')">
-        🛒
-        <span id="basket-count" class="fab-badge">0</span>
-    </button>
 
     <!-- Toast Notifications -->
     <div id="toast-container" class="toast-container"></div>
@@ -149,4 +81,3 @@
     <script src="app.js"></script>
 </body>
 </html>
-
