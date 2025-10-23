@@ -48,9 +48,9 @@ requirements.txt       # Updated (flask-cors added)
 
 ### Environment Variables Needed on Render
 ```bash
-TELEGRAM_BOT_TOKEN=your_bot_token
+TOKEN=your_bot_token  # IMPORTANT: Must be TOKEN not TELEGRAM_BOT_TOKEN
 WEBAPP_URL=https://your-app-name.onrender.com
-MEDIA_DIR=/opt/render/project/src/media
+DISK_MOUNT_PATH=/data  # Render persistent disk mount point
 PORT=10000  # Render default
 ```
 
@@ -84,6 +84,22 @@ PORT=10000  # Render default
 ---
 
 ## 🐛 KNOWN ISSUES & FIXES
+
+### Issue #4: Render Deployment - Wrong Environment Variable & Path
+**Status:** ✅ FIXED
+**Problem:** 
+- Code expects `TOKEN` but Render had `TELEGRAM_BOT_TOKEN`
+- Code used `/mnt/data` but Render disk mounts at `/data`
+**Solution:** 
+- Changed `utils.py:27` to use `os.getenv('DISK_MOUNT_PATH', '/data')`
+- Updated environment variable name in tracker
+**Environment Variables:**
+```
+TOKEN=your_bot_token  (NOT TELEGRAM_BOT_TOKEN)
+DISK_MOUNT_PATH=/data
+WEBAPP_URL=https://your-app.onrender.com
+PORT=10000
+```
 
 ### Issue #1: Race Condition - Product Deletion
 **Status:** ✅ FIXED
