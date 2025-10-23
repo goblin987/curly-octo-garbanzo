@@ -45,7 +45,8 @@ from utils import (
     clean_abandoned_reservations,
     get_crypto_price_eur,
     get_first_primary_admin_id, # Admin helper for notifications
-    is_user_banned  # Import ban check helper
+    is_user_banned,  # Import ban check helper
+    CITIES, DISTRICTS, PRODUCT_TYPES  # Import for mini app API
 )
 import user # Import user module
 from user import (
@@ -1202,14 +1203,12 @@ def root():
 @flask_app.route('/api/cities', methods=['GET'])
 def api_get_cities():
     """Get all available cities"""
-    from utils import CITIES
     cities_list = [{'id': city_id, 'name': city_name} for city_id, city_name in CITIES.items()]
     return jsonify({'success': True, 'cities': cities_list})
 
 @flask_app.route('/api/districts/<city_id>', methods=['GET'])
 def api_get_districts(city_id):
     """Get districts for a city"""
-    from utils import DISTRICTS
     districts_dict = DISTRICTS.get(city_id, {})
     districts_list = [{'id': dist_id, 'name': dist_name} for dist_id, dist_name in districts_dict.items()]
     return jsonify({'success': True, 'districts': districts_list})
@@ -1217,14 +1216,12 @@ def api_get_districts(city_id):
 @flask_app.route('/api/product-types', methods=['GET'])
 def api_get_product_types():
     """Get all product types with emojis"""
-    from utils import PRODUCT_TYPES
     types_list = [{'name': type_name, 'emoji': emoji} for type_name, emoji in PRODUCT_TYPES.items()]
     return jsonify({'success': True, 'types': types_list})
 
 @flask_app.route('/api/products', methods=['GET'])
 def api_get_products():
     """Get products with filters"""
-    from utils import CITIES, DISTRICTS, PRODUCT_TYPES
     from reseller_management import get_reseller_discount
     
     city = request.args.get('city')
@@ -1297,7 +1294,6 @@ def api_get_products():
 @flask_app.route('/api/basket', methods=['GET'])
 def api_get_basket():
     """Get user's basket"""
-    from utils import PRODUCT_TYPES
     from reseller_management import get_reseller_discount
     import time
     
