@@ -96,9 +96,13 @@ if len(token_parts) != 2 or not token_parts[0].isdigit() or len(token_parts[1]) 
 
 logger.info(f"TOKEN validation passed. Bot ID: {token_parts[0]}")
 
-if not NOWPAYMENTS_API_KEY: logger.critical("CRITICAL ERROR: NOWPAYMENTS_API_KEY environment variable is missing."); raise SystemExit("NOWPAYMENTS_API_KEY not set.")
-if not NOWPAYMENTS_IPN_SECRET: logger.info("NOWPayments webhook signature verification is disabled by configuration.")
-if not WEBHOOK_URL: logger.critical("CRITICAL ERROR: WEBHOOK_URL environment variable is missing."); raise SystemExit("WEBHOOK_URL not set.")
+# NOWPayments key is only required for payment processing (not for webapp API)
+if not NOWPAYMENTS_API_KEY: 
+    logger.warning("WARNING: NOWPAYMENTS_API_KEY environment variable is missing. Payment features will not work.")
+if not NOWPAYMENTS_IPN_SECRET: 
+    logger.info("NOWPayments webhook signature verification is disabled by configuration.")
+if not WEBHOOK_URL: 
+    logger.warning("WARNING: WEBHOOK_URL environment variable is missing. Webhook features will not work.")
 if not PRIMARY_ADMIN_IDS: logger.warning("No primary admin IDs configured. Primary admin features disabled.")
 logger.info(f"Loaded {len(PRIMARY_ADMIN_IDS)} primary admin ID(s): {PRIMARY_ADMIN_IDS}")
 logger.info(f"Loaded {len(SECONDARY_ADMIN_IDS)} secondary admin ID(s): {SECONDARY_ADMIN_IDS}")
